@@ -1,20 +1,21 @@
-const express = require('express');
-const admin = require('firebase-admin');
-const fetch = require('node-fetch');
-const bodyParser = require('body-parser');
+const express = require("express");
+const admin = require("firebase-admin");
+const fetch = require("node-fetch");
+const cors = require("cors");
+
 const app = express();
-const port = process.env.PORT || 3000;
+app.use(cors());
+app.use(express.json());
 
-app.use(bodyParser.json());
+admin.initializeApp();
 
-admin.initializeApp({
-  credential: admin.credential.applicationDefault()
-});
+const serviceRoleKey = 'حط هنا service_role key من supabase';
+const supabaseUrl = 'https://bnnjifrokyurklsdiouj.supabase.co';
 
-const serviceRoleKey = 'YOUR_SUPABASE_SERVICE_ROLE_KEY';
-const supabaseUrl = 'https://YOUR_PROJECT.supabase.co';
+app.post("/forwardToSupabase", async (req, res) => {
+  console.log("✅ Request from Flutter:");
+  console.log(req.body);  // نطبع البيانات اللى جاية من Flutter
 
-app.post('/forwardToSupabase', async (req, res) => {
   const idToken = req.body.idToken;
 
   try {
@@ -34,17 +35,21 @@ app.post('/forwardToSupabase', async (req, res) => {
         name: req.body.name,
         age: req.body.age,
         medical_history: req.body.medical_history
-      })
+      }),
     });
 
     const data = await response.json();
-    res.status(200).json({ message: "Inserted into Supabase", data });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(401).json({ error: error.message });
+    console.log("📩 Supabase Response:", data);
+
+    res.status(200).send({ message: "✅ Inserted into Supabase", data });
+
+  } catch (err) {
+    console.error("❌ Error:", err.message);
+    res.status(401).send({ error: err.message });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
